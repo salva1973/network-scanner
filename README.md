@@ -1,6 +1,3 @@
-<!--
- Copyright (c) 2023 Salvatore Vivolo
+# network-scanner
 
- This software is released under the MIT License.
- https://opensource.org/licenses/MIT
--->
+Creates a json file with the result of a network scan.
