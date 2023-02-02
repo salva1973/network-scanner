@@ -7,7 +7,7 @@ const { toVendor } = require('@network-utils/vendor-lookup')
 let devices = []
 
 const localIP = ip.address()
-const subnet = localIP.slice(0, localIP.lastIndexOf('.') + 1)
+let subnet = localIP.slice(0, localIP.lastIndexOf('.') + 1)
 
 async function checkHost(host) {
   try {
@@ -15,12 +15,21 @@ async function checkHost(host) {
     if (res.alive) {
       const mac = await toMAC(host)
       const vendor = toVendor(mac)
-      devices.push({
+      const device = {
         'ip-address': host,
         'mac-address': mac,
         'vendor-name': vendor,
         'response-time': res.time,
-      })
+      }
+      if (
+        vendor.toLowerCase().trim().includes('elau') ||
+        vendor.toLowerCase().trim().includes('schneider')
+      ) {
+        device.additional = {
+          type: 'Schneider Controller'
+        }
+      }
+      devices.push(device)
     }
   } catch (err) {
     console.error(err)
@@ -68,8 +77,12 @@ async function writeJSONFile(filename, data) {
   })
 }
 
-const scanNetwork = async () => {
+const scanNetwork = async subNetwork => {
   try {
+    if (typeof subNetwork !== 'undefined') {
+      subnet = subNetwork.slice(0, subNetwork.lastIndexOf('.') + 1) // override
+    }
+    console.log(`Scanning network ${subnet}0...`)
     const hostChecks = []
     for (let i = 1; i <= 254; i++) {
       const host = subnet + i
@@ -77,8 +90,12 @@ const scanNetwork = async () => {
     }
     await Promise.all(hostChecks).catch(console.error)
     sortByIpAddress(devices, 'ip-address')
-    await writeJSONFile('devices.json', devices)
-    console.log(`Saved ${devices.length} devices to 'devices.json'.`)
+    if (devices.length !== 0) {
+      await writeJSONFile('devices.json', devices)
+      console.log(`Saved ${devices.length} devices to 'devices.json'.`)
+    } else {
+      console.log('No devices found. Check your network connection!')
+    }
   } catch (err) {
     console.error(err)
   }
