@@ -8,10 +8,15 @@ let devices = []
 
 const localIP = ip.address()
 let subnet = localIP.slice(0, localIP.lastIndexOf('.') + 1)
+let deviceCounter = 0
+let percentage = 0
 
 async function checkHost(host) {
   try {
     const res = await ping.promise.probe(host)
+    deviceCounter++
+    percentage = Math.floor(deviceCounter/254*100)
+    process.stdout.write(`Scanning ${percentage}% complete\r`)    
     if (res.alive) {
       const mac = await toMAC(host)
       const vendor = toVendor(mac)
@@ -23,7 +28,8 @@ async function checkHost(host) {
       }
       if (
         vendor.toLowerCase().trim().includes('elau') ||
-        vendor.toLowerCase().trim().includes('schneider')
+        vendor.toLowerCase().trim().includes('schneider') ||
+        vendor.toLowerCase().trim().includes('telemecanique')        
       ) {
         device.additional = {
           type: 'Schneider Controller'
