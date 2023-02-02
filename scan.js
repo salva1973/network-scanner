@@ -15,8 +15,10 @@ async function checkHost(host) {
   try {
     const res = await ping.promise.probe(host)
     deviceCounter++
-    percentage = Math.floor(deviceCounter/254*100)
-    process.stdout.write(`Scanning ${percentage}% complete\r`)    
+    percentage = Math.floor((deviceCounter / 254) * 100)
+    process.stdout.write(
+      `\x1b[33mScanning ${percentage}% complete\x1b[0m    \r`
+    )
     if (res.alive) {
       const mac = await toMAC(host)
       const vendor = toVendor(mac)
@@ -29,10 +31,10 @@ async function checkHost(host) {
       if (
         vendor.toLowerCase().trim().includes('elau') ||
         vendor.toLowerCase().trim().includes('schneider') ||
-        vendor.toLowerCase().trim().includes('telemecanique')        
+        vendor.toLowerCase().trim().includes('telemecanique')
       ) {
         device.additional = {
-          type: 'Schneider Controller'
+          type: 'Schneider Controller',
         }
       }
       devices.push(device)
@@ -83,24 +85,40 @@ async function writeJSONFile(filename, data) {
   })
 }
 
+function asyncWait(time) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve()
+    }, time)
+  })
+}
+
 const scanNetwork = async subNetwork => {
   try {
     if (typeof subNetwork !== 'undefined') {
       subnet = subNetwork.slice(0, subNetwork.lastIndexOf('.') + 1) // override
     }
-    console.log(`Scanning network ${subnet}0...`)
+    console.log(`\x1b[34mScanning network ${subnet}0...\x1b[0m`)
     const hostChecks = []
     for (let i = 1; i <= 254; i++) {
       const host = subnet + i
       hostChecks.push(checkHost(host))
     }
     await Promise.all(hostChecks).catch(console.error)
-    sortByIpAddress(devices, 'ip-address')
     if (devices.length !== 0) {
+      process.stdout.write('\x1b[33mSorting the devices...\x1b[0m         \r')
+      await asyncWait(500)
+      sortByIpAddress(devices, 'ip-address')
+      process.stdout.write('\x1b[33mSaving the file...\x1b[0m             \r')
+      await asyncWait(500)
       await writeJSONFile('devices.json', devices)
-      console.log(`Saved ${devices.length} devices to 'devices.json'.`)
+      console.log(
+        `\x1b[32mSaved ${devices.length} devices to 'devices.json'.\x1b[0m`
+      )
     } else {
-      console.log('No devices found. Check your network connection!')
+      console.log(
+        '\x1b[31mNo devices found. Check your network connection!\x1b[0m'
+      )
     }
   } catch (err) {
     console.error(err)
