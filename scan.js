@@ -19,6 +19,11 @@ async function checkHost(host) {
     process.stdout.write(
       `\x1b[33mScanning ${percentage}% complete\x1b[0m    \r`
     )
+    if (percentage === 100) {
+      process.stdout.write(
+        `\x1b[33mFinalizing...\x1b[0m    \r`
+      )
+    }
     if (res.alive) {
       const mac = await toMAC(host)
       const vendor = toVendor(mac)
