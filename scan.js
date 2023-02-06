@@ -21,7 +21,7 @@ async function checkHost(host) {
     )
     if (percentage === 100) {
       process.stdout.write(
-        `\x1b[33mFinalizing...\x1b[0m    \r`
+        `\x1b[33mFinalizing...                      \x1b[0m    \r`
       )
     }
     if (res.alive) {
