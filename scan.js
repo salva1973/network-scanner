@@ -36,7 +36,12 @@ async function checkHost(host) {
         device.additional = {
           type: 'Schneider Controller',
         }
+      } else if (vendor.toLowerCase().trim().includes('axis')) {
+        device.additional = {
+          type: 'IP Camera',
+        }
       }
+
       devices.push(device)
     }
   } catch (err) {
